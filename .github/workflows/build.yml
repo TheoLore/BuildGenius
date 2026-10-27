@@ -1,0 +1,65 @@
+name: Build Plugin
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: |
+          if [ -f ./gradlew ]; then
+            chmod +x ./gradlew
+          else
+            echo "No gradlew yet – will use gradle wrapper from distribution"
+          fi
+
+      - name: Build plugin (assembleRelease)
+        run: |
+          # If wrapper is missing, use system gradle to generate it first
+          if [ ! -f ./gradlew ]; then
+            gradle wrapper --gradle-version 8.11.1
+            chmod +x ./gradlew
+          fi
+          ./gradlew :main:assembleRelease --stacktrace --info
+
+      - name: Upload .acp artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: BuildGenius-acp
+          path: |
+            main/build/*.acp
+            BuildGenius.acp
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload build reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-reports
+          path: |
+            main/build/reports/**
+            main/build/outputs/**
+          if-no-files-found: ignore
+          retention-days: 7
