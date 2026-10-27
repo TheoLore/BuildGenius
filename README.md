@@ -4,85 +4,48 @@
 
 English only • Built for serious productivity
 
+**This repository is the main workspace.**
+
 ---
 
 ## What it does
 
-Build Genius is an **AI-like error fixing system** for ACSIDE:
-
-1. **Static analysis** of your project (AGP, Kotlin, compileSdk, AndroidX, heap, structure…)
-2. **Real error parsing** – understands Gradle / compiler logs:
-   - Missing dependencies (`Could not find …`, `Failed to resolve …`)
-   - Unresolved references → suggests the correct library (ViewModel, Retrofit, Compose, Room, Hilt…)
-   - Duplicate classes / Support vs AndroidX conflicts
-   - OOM / heap issues
-   - AGP / Kotlin / JDK mismatches
-   - Manifest merger failures
-   - Missing plugins & SDK platforms
-3. **One-click safe fixes** that actually edit your `build.gradle(.kts)` and `gradle.properties`
-4. **Health Score** dashboard (0–100)
+1. **Static analysis** – AGP, Kotlin, compileSdk, AndroidX, heap, structure
+2. **Real error parsing** – missing deps, unresolved refs, OOM, conflicts
+3. **Environment alignment** – matches project to installed ACSIDE SDK/JDK/Flutter
+4. **TURBO MODE** – max on-device Gradle speed (Bionic / Termux packages aware)
+5. **One-click fixes** that edit real build files
 
 ---
 
-## Features
+## TURBO MODE
 
-| Feature | Description |
-|--------|-------------|
-| Project Health Score | 0–100 based on real issues |
-| Smart Diagnosis | AGP, Kotlin, SDK, Properties, Structure |
-| **Error Log Parser** | Understands real Gradle/compiler output |
-| **Dependency Catalog** | 50+ common symbols → correct Maven coordinates |
-| One-Click Fix | High-confidence automatic repairs |
-| Add Missing Library | Literally inserts `implementation("…")` |
-| Fix All Safe | Applies every safe fix in priority order |
-| Quick Fix action | Silent auto-fixes from editor menu |
-| Material 3 UI | Modern overlay dashboard |
+One button applies:
+
+- parallel + workers + configuration-cache
+- build cache + daemon + vfs.watch
+- nonTransitiveRClass + nonFinalResIds
+- Kotlin incremental + in-process compiler
+- heap tuned for phones (ACSIDE heat-aware defaults)
 
 ---
 
-## How the "AI-like" fixing works
-
-```
-Build log / static scan
-        ↓
-   ErrorParser (patterns + DependencyCatalog)
-        ↓
-   List of BuildIssue (severity + confidence + fixActionId)
-        ↓
-   BuildFixer (writes real changes to build files)
-        ↓
-   Re-sync project → problem gone
-```
-
-No external AI API required. Everything runs offline on-device.
-
----
-
-## How to build
+## Build
 
 ```bash
 ./gradlew :main:assembleRelease
 ```
 
-Or let **GitHub Actions** build it (push to `main` or run the workflow manually). The `.acp` is uploaded as an artifact.
+Or use **Actions** → artifact `BuildGenius-acp`.
 
 ---
 
-## Installation in ACSIDE
+## Install in ACSIDE
 
-1. Get `BuildGenius.acp` (from Actions artifact or local build)
-2. ACSIDE → Plugins → Install from file
-
----
-
-## Safety
-
-- Only high-confidence fixes are auto-applied
-- Every change is tracked
-- Offline, no telemetry
+Plugins → install `BuildGenius.acp`
 
 ---
 
 ## Author
 
-Canadian developer – made for people who ship apps on-device.
+Canadian developer – ship on-device.
