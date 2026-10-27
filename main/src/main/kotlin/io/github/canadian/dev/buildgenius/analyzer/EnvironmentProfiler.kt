@@ -5,7 +5,8 @@ import com.nullij.androidcodestudio.plugins.api.PluginApi
 import java.io.File
 
 /**
- * Reads the REAL ACSIDE environment via PluginApi.environment.
+ * Reads the REAL ACSIDE environment via PluginApi.environment:
+ * SDK platforms, build-tools, Flutter, JDK, paths.
  */
 class EnvironmentProfiler {
 
@@ -40,7 +41,6 @@ class EnvironmentProfiler {
 
     fun profile(): Profile {
         val env = PluginApi.environment
-
         if (!env.isInitialized()) {
             Log.w(TAG, "Environment not initialized yet")
             return emptyProfile()
@@ -51,19 +51,12 @@ class EnvironmentProfiler {
         val platforms = scanPlatforms(androidSdk)
         val buildTools = scanBuildTools(androidSdk)
         val highestApi = platforms.maxOfOrNull { it.api }
-        val preferredCompile = highestApi
         val preferredBt = buildTools.maxByOrNull { parseVersionKey(it.version) }?.version
-
         val javaHome = env.rootfsJavaHome ?: env.getEnvironment()["JAVA_HOME"]
         val javaHint = detectJavaVersion(javaHome, env.getEnvironment())
+        val envMap = try { env.getEnvironment() } catch (e: Exception) { emptyMap() }
 
-        val envMap = try {
-            env.getEnvironment()
-        } catch (e: Exception) {
-            emptyMap()
-        }
-
-        Log.i(TAG, "SDK=${androidSdk?.absolutePath} platforms=${platforms.map { it.api }} build-tools=${buildTools.map { it.version }}")
+        Log.i(TAG, "SDK=${androidSdk?.absolutePath} platforms=${platforms.map { it.api }}")
 
         return Profile(
             initialized = true,
@@ -79,7 +72,7 @@ class EnvironmentProfiler {
             installedPlatforms = platforms,
             installedBuildTools = buildTools,
             highestPlatformApi = highestApi,
-            preferredCompileSdk = preferredCompile,
+            preferredCompileSdk = highestApi,
             preferredBuildTools = preferredBt,
             javaHome = javaHome,
             javaVersionHint = javaHint,
@@ -117,9 +110,7 @@ class EnvironmentProfiler {
     private fun parseVersionKey(v: String): Long {
         val parts = v.split('.', '-').mapNotNull { it.toLongOrNull() }
         var key = 0L
-        for (i in 0 until 4) {
-            key = key * 1000 + (parts.getOrNull(i) ?: 0)
-        }
+        for (i in 0 until 4) key = key * 1000 + (parts.getOrNull(i) ?: 0)
         return key
     }
 
@@ -131,24 +122,7 @@ class EnvironmentProfiler {
     }
 
     private fun emptyProfile() = Profile(
-        initialized = false,
-        openProjectDir = null,
-        projectsDir = null,
-        androidSdkDir = null,
-        flutterDir = null,
-        homeDir = null,
-        localDir = null,
-        tmpDir = null,
-        rootfsAndroidSdkPath = null,
-        rootfsJavaHome = null,
-        installedPlatforms = emptyList(),
-        installedBuildTools = emptyList(),
-        highestPlatformApi = null,
-        preferredCompileSdk = null,
-        preferredBuildTools = null,
-        javaHome = null,
-        javaVersionHint = null,
-        hasFlutter = false,
-        envMap = emptyMap()
+        false, null, null, null, null, null, null, null, null, null,
+        emptyList(), emptyList(), null, null, null, null, null, false, emptyMap()
     )
 }
