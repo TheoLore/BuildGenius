@@ -1,0 +1,14 @@
+*.iml
+.gradle/
+.idea/
+local.properties
+build/
+*.acp
+.DS_Store
+*.apk
+*.ap_
+*.dex
+captures/
+.externalNativeBuild/
+.cxx/
+*.hprof
