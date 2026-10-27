@@ -17,8 +17,32 @@ class ProjectAnalyzer {
     private val errorParser = ErrorParser()
 
     fun analyze(buildLog: String? = null): ProjectSnapshot {
-        val env = PluginApi.environment
-        val projectDir = env.openProjectDir
+        return try {
+            analyzeInternal(buildLog)
+        } catch (t: Throwable) {
+            Log.e(TAG, "analyze failed: ${t.javaClass.name}: ${t.message}", t)
+            emptySnapshot().copy(
+                issues = listOf(
+                    BuildIssue(
+                        id = "analyze_crash",
+                        title = "Analysis error",
+                        description = "${t.javaClass.simpleName}: ${(t.message ?: "").take(250)}",
+                        severity = IssueSeverity.HIGH,
+                        category = IssueCategory.OTHER,
+                        autoFixable = false
+                    )
+                )
+            )
+        }
+    }
+
+    private fun analyzeInternal(buildLog: String?): ProjectSnapshot {
+        val projectDir = try {
+            PluginApi.environment.openProjectDir
+        } catch (t: Throwable) {
+            Log.w(TAG, "openProjectDir failed", t)
+            null
+        }
         if (projectDir == null || !projectDir.exists()) {
             return emptySnapshot()
         }
