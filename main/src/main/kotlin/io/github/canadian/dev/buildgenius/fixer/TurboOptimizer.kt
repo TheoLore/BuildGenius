@@ -8,33 +8,49 @@ import io.github.canadian.dev.buildgenius.model.ProjectSnapshot
 import java.io.File
 
 /**
- * ACSIDE-aware build speed system (Termux Packages + Bionic).
- * Official templates: 512m heap + parallel + caching; heat alert ~45C.
+ * ACSIDE on-device speed profile (Termux/Bionic).
+ * Conservative defaults: avoid configuration-cache (flaky on-device),
+ * limited workers, moderate heap.
  */
 class TurboOptimizer {
 
     companion object {
         private const val TAG = "BuildGenius.Turbo"
         private const val HEAP_DEFAULT = "1024m"
-        private const val HEAP_HIGH = "1536m"
+        private const val HEAP_HIGH = "1280m"
     }
 
     fun applyTurbo(snapshot: ProjectSnapshot): FixResult {
+        return try {
+            applyTurboInternal(snapshot)
+        } catch (t: Throwable) {
+            Log.e(TAG, "Turbo failed", t)
+            FixResult(false, "Turbo failed: ${t.message ?: t.javaClass.simpleName}")
+        }
+    }
+
+    private fun applyTurboInternal(snapshot: ProjectSnapshot): FixResult {
         val dir = snapshot.projectDir ?: return FixResult(false, "No project open")
         val propsFile = File(dir, "gradle.properties")
-        val original = if (propsFile.exists()) propsFile.readText() else ""
+        val original = if (propsFile.exists()) {
+            try {
+                propsFile.readText()
+            } catch (t: Throwable) {
+                return FixResult(false, "Cannot read gradle.properties")
+            }
+        } else ""
+
         val env = EnvironmentProfiler().profile()
         val heap = if (env.installedPlatforms.size >= 3) HEAP_HIGH else HEAP_DEFAULT
 
+        // configuration-cache often breaks first builds / plugin tasks on-device → off by default
         val desired = linkedMapOf(
-            "org.gradle.jvmargs" to "-Xmx$heap -XX:+UseParallelGC -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=384m",
+            "org.gradle.jvmargs" to "-Xmx$heap -XX:+UseParallelGC -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=256m",
             "org.gradle.parallel" to "true",
-            "org.gradle.workers.max" to "4",
+            "org.gradle.workers.max" to "2",
             "org.gradle.caching" to "true",
-            "org.gradle.configuration-cache" to "true",
-            "org.gradle.configuration-cache.problems" to "warn",
+            "org.gradle.configuration-cache" to "false",
             "org.gradle.daemon" to "true",
-            "org.gradle.vfs.watch" to "true",
             "android.useAndroidX" to "true",
             "android.enableJetifier" to "true",
             "android.nonTransitiveRClass" to "true",
@@ -62,11 +78,12 @@ class TurboOptimizer {
             lines.add(0, "# Build Genius Turbo – ACSIDE on-device profile")
         }
         val updated = lines.joinToString("\n").let { if (it.endsWith("\n")) it else "$it\n" }
+        propsFile.parentFile?.mkdirs()
         propsFile.writeText(updated)
-        Log.i(TAG, "Turbo applied heap=$heap")
+        Log.i(TAG, "Turbo applied heap=$heap workers=2")
         return FixResult(
             true,
-            "Turbo Mode ON (heap=$heap). Re-sync to apply.",
+            "Turbo Mode ON (heap=$heap, workers=2). Re-sync to apply.",
             listOf(FileChange(propsFile, original, updated, "Apply ACSIDE Turbo profile"))
         )
     }
@@ -75,7 +92,11 @@ class TurboOptimizer {
         val dir = snapshot.projectDir ?: return listOf("no project")
         val props = File(dir, "gradle.properties")
         if (!props.exists()) return listOf("gradle.properties missing")
-        val text = props.readText()
+        val text = try {
+            props.readText()
+        } catch (t: Throwable) {
+            return listOf("gradle.properties unreadable")
+        }
         val required = listOf(
             "org.gradle.parallel",
             "org.gradle.caching",
