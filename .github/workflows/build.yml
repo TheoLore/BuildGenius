@@ -24,7 +24,7 @@ jobs:
 
       - name: Install Android command-line tools
         run: |
-          set -e
+          set -euo pipefail
           ANDROID_HOME="$HOME/android-sdk"
           mkdir -p "$ANDROID_HOME/cmdline-tools"
           curl -fsSL -o /tmp/cmdline-tools.zip \
@@ -40,9 +40,17 @@ jobs:
 
       - name: Accept licenses and install platform 35
         run: |
-          set -e
+          set -euo pipefail
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "Installed platforms:"
+          ls -la "$ANDROID_HOME/platforms" || true
+          ls -la "$ANDROID_HOME/build-tools" || true
+
+      - name: Write local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          cat local.properties
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -51,13 +59,15 @@ jobs:
         run: |
           if [ ! -f ./gradlew ]; then
             gradle wrapper --gradle-version 8.11.1
-            chmod +x ./gradlew
           fi
+          chmod +x ./gradlew
 
       - name: Build plugin
         run: |
-          chmod +x ./gradlew || true
-          ./gradlew :main:assembleRelease --stacktrace --no-daemon
+          set -euo pipefail
+          ./gradlew :main:assembleRelease --stacktrace --no-daemon --info 2>&1 | tee build-output.log
+          echo "--- outputs ---"
+          find main/build -name '*.acp' -o -name '*.apk' | head -50 || true
 
       - name: Upload .acp artifact
         uses: actions/upload-artifact@v4
@@ -71,12 +81,13 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload build reports on failure
+      - name: Upload build log on failure
         uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: build-reports
           path: |
+            build-output.log
             main/build/reports/**
             **/build/outputs/**
           if-no-files-found: ignore
