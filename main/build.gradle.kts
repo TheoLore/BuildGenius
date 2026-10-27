@@ -22,14 +22,21 @@ acpPlugin {
 
 android {
     namespace = packageName
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = packageName
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = pluginVersion
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 
     compileOptions {
@@ -81,7 +88,7 @@ tasks.register("updatePluginInf") {
             jsonObject.addProperty("version", pluginVersion)
             jsonObject.addProperty("name", pluginName)
             pluginJsonFile.writeText(gson.toJson(jsonObject))
-            println("Updated plugin.json → version=$pluginVersion, name=$pluginName")
+            println("Updated plugin.json")
         }
     }
 }
@@ -110,27 +117,17 @@ tasks.register("updateRepositoryJson") {
         }
 
         acpFile.copyTo(destAcp, overwrite = true)
-        println("Copied ${acpFile.name} → ${destAcp.absolutePath}")
 
-        if (!repoFile.exists()) {
-            println("repository.json not found — skipping")
-            return@doLast
-        }
+        if (!repoFile.exists()) return@doLast
 
         val gson = GsonBuilder().setPrettyPrinting().create()
         val json = gson.fromJson(repoFile.readText(), JsonObject::class.java)
-
         json.addProperty("latestVersion", pluginVersion)
-        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
-        json.addProperty("lastUpdated", timestamp)
-
+        json.addProperty("lastUpdated", SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date()))
         val bytes = destAcp.readBytes()
-        val digest = MessageDigest.getInstance("SHA-256")
-        val checksum = digest.digest(bytes).joinToString("") { "%02x".format(it) }
+        val checksum = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
         json.addProperty("checksum", checksum)
         json.addProperty("size", bytes.size.toLong())
-
         repoFile.writeText(gson.toJson(json))
-        println("Updated repository.json\n  version: $pluginVersion\n  checksum: $checksum\n  size: ${bytes.size}")
     }
 }
