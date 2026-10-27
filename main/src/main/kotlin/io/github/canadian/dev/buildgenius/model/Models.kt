@@ -2,17 +2,12 @@ package io.github.canadian.dev.buildgenius.model
 
 import java.io.File
 
-/**
- * Core data models for Build Genius.
- * Designed to be lightweight and serializable.
- */
-
 enum class IssueSeverity {
-    CRITICAL,   // Blocks build completely
-    HIGH,       // Likely to fail soon or causes major problems
-    MEDIUM,     // Should be fixed
-    LOW,        // Nice to have / style
-    INFO        // Informational only
+    CRITICAL,
+    HIGH,
+    MEDIUM,
+    LOW,
+    INFO
 }
 
 enum class IssueCategory {
@@ -60,8 +55,9 @@ data class ProjectSnapshot(
     val healthScore: Int
         get() {
             if (issues.isEmpty()) return 100
-            val penalty = issues.sumOf {
-                when (it.severity) {
+            var penalty = 0
+            for (issue in issues) {
+                penalty += when (issue.severity) {
                     IssueSeverity.CRITICAL -> 25
                     IssueSeverity.HIGH -> 15
                     IssueSeverity.MEDIUM -> 8
