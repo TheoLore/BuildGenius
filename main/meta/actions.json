@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "actions": [
+    {
+      "id": "action_build_genius_open",
+      "type": "plugin_action",
+      "title": "Build Genius",
+      "description": "Open the Build Genius dashboard – diagnose, fix and monitor your project build health",
+      "iconName": "Build",
+      "showIn": ["editorOverflow", "toolbar", "onEditorActivityLaunched"],
+      "priority": 10,
+      "pluginConfig": {
+        "pluginPath": "BuildGenius/plugin.apk",
+        "className": "io.github.canadian.dev.buildgenius.BuildGeniusPlugin",
+        "methodName": "setContext",
+        "methodType": "static"
+      }
+    },
+    {
+      "id": "action_build_genius_quick_fix",
+      "type": "plugin_action",
+      "title": "Quick Fix Build",
+      "description": "Run automatic diagnosis + apply the safest recommended fixes",
+      "iconName": "AutoFixHigh",
+      "showIn": ["editorOverflow"],
+      "priority": 11,
+      "pluginConfig": {
+        "pluginPath": "BuildGenius/plugin.apk",
+        "className": "io.github.canadian.dev.buildgenius.BuildGeniusPlugin",
+        "methodName": "quickFix",
+        "methodType": "static"
+      }
+    }
+  ]
+}
