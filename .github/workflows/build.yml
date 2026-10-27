@@ -25,6 +25,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install Android platform 34
+        run: |
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
+          yes | sdkmanager --licenses || true
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -35,7 +40,7 @@ jobs:
             chmod +x ./gradlew
           fi
 
-      - name: Build plugin (assembleRelease)
+      - name: Build plugin
         run: |
           chmod +x ./gradlew || true
           ./gradlew :main:assembleRelease --stacktrace --no-daemon
