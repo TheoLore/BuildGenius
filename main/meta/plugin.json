@@ -1,11 +1,9 @@
 {
   "name": "BuildGenius",
   "displayName": "Build Genius",
-  "description": "Intelligent build doctor for ACSIDE. Diagnoses Gradle/Sync/Compile issues, applies safe one-click fixes with live diff preview, and gives you a complete project health dashboard. English only. Built for serious productivity.",
-  "version": "1.0.0",
+  "description": "Fixes ACSIDE Gradle sync failures (Library.getSrcJars and more) from the home screen or the editor.",
+  "version": "1.2.0",
   "author": "Canadian Dev",
   "icon": "icon.png",
-  "enabled": true,
-  "configurable": true,
-  "configureClass": "io.github.canadian.dev.buildgenius.BuildGeniusPlugin"
+  "enabled": true
 }

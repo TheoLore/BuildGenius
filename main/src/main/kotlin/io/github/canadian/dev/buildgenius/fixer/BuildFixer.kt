@@ -30,6 +30,8 @@ class BuildFixer {
                 action == "align_compile_sdk_to_env" -> alignCompileSdkToEnv(snapshot)
                 action == "align_sdk_dir" -> alignSdkDir(snapshot)
                 action == "apply_turbo" -> TurboOptimizer().applyTurbo(snapshot)
+                action == "upgrade_gradle_wrapper" -> upgradeGradleWrapper(snapshot)
+                action == "disable_vfs_watch" -> disableVfsWatch(snapshot)
                 action.startsWith("add_dependency:") ->
                     addDependency(snapshot, action.removePrefix("add_dependency:"))
                 else -> FixResult(false, "Unknown fix action: $action")
@@ -238,6 +240,45 @@ class BuildFixer {
         val updated = lines.joinToString("\n").let { if (it.endsWith("\n")) it else "$it\n" }
         safeWrite(props, updated)
         return FixResult(true, "Set sdk.dir to $value", listOf(FileChange(props, original, updated, "sdk.dir")))
+    }
+
+
+    private fun upgradeGradleWrapper(snapshot: ProjectSnapshot): FixResult {
+        val dir = snapshot.projectDir ?: return FixResult(false, "No project")
+        val props = File(dir, "gradle/wrapper/gradle-wrapper.properties")
+        if (!props.exists()) return FixResult(false, "gradle-wrapper.properties not found")
+        val original = safeRead(props) ?: return FixResult(false, "Cannot read wrapper properties")
+        val line = "distributionUrl=https\\://services.gradle.org/distributions/gradle-8.11.1-bin.zip"
+        val lines = original.lines().toMutableList()
+        val idx = lines.indexOfFirst { it.trimStart().startsWith("distributionUrl=") }
+        if (idx >= 0) {
+            if (lines[idx].contains("gradle-8.11.1") || lines[idx].contains("gradle-8.12") || lines[idx].contains("gradle-8.13") || lines[idx].contains("gradle-8.14") || lines[idx].contains("gradle-9.")) {
+                return FixResult(true, "Gradle wrapper already new enough for ACSIDE sync")
+            }
+            lines[idx] = line
+        } else {
+            lines.add(line)
+        }
+        val updated = lines.joinToString("\n").let { if (it.endsWith("\n")) it else "$it\n" }
+        safeWrite(props, updated)
+        return FixResult(
+            true,
+            "Upgraded Gradle wrapper to 8.11.1 (fixes Library.getSrcJars). Sync again.",
+            listOf(FileChange(props, original, updated, "Gradle 8.11.1"))
+        )
+    }
+
+    private fun disableVfsWatch(snapshot: ProjectSnapshot): FixResult {
+        val dir = snapshot.projectDir ?: return FixResult(false, "No project")
+        val props = File(dir, "gradle.properties")
+        val original = if (props.exists()) (safeRead(props) ?: "") else ""
+        val lines = original.lines().toMutableList()
+        val idx = lines.indexOfFirst { it.trimStart().startsWith("org.gradle.vfs.watch=") }
+        if (idx >= 0) lines[idx] = "org.gradle.vfs.watch=false" else lines.add("org.gradle.vfs.watch=false")
+        val updated = lines.joinToString("\n").let { if (it.endsWith("\n")) it else "$it\n" }
+        if (updated == original) return FixResult(true, "VFS watch already off")
+        safeWrite(props, updated)
+        return FixResult(true, "Disabled Gradle file watching (unsupported on ACSIDE)", listOf(FileChange(props, original, updated, "vfs.watch=false")))
     }
 
     private fun findRootBuild(snapshot: ProjectSnapshot): File? {

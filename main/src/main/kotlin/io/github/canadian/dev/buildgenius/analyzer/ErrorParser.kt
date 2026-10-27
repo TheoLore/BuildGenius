@@ -77,6 +77,38 @@ class ErrorParser {
             }
         }
 
+
+        if (log.contains("Library.getSrcJars") || log.contains("Unsupported method: Library.getSrcJars")) {
+            add(
+                BuildIssue(
+                    id = "gradle_srcjars",
+                    title = "ACSIDE sync: Library.getSrcJars()",
+                    description = "Project Gradle is older than the IDE tooling API. Wrapper must be 8.11.1+.",
+                    severity = IssueSeverity.CRITICAL,
+                    category = IssueCategory.GRADLE_PLUGIN,
+                    suggestedFix = "Set Gradle wrapper to 8.11.1",
+                    autoFixable = true,
+                    fixActionId = "upgrade_gradle_wrapper",
+                    confidence = 0.99f
+                )
+            )
+        }
+
+        if (log.contains("Watching the file system is not supported", true)) {
+            add(
+                BuildIssue(
+                    id = "vfs_watch_unsupported",
+                    title = "File watching unsupported on device",
+                    description = "org.gradle.vfs.watch should be false on ACSIDE.",
+                    severity = IssueSeverity.LOW,
+                    category = IssueCategory.PROPERTIES,
+                    autoFixable = true,
+                    fixActionId = "disable_vfs_watch",
+                    confidence = 0.9f
+                )
+            )
+        }
+
         if (log.contains("Java heap space", true) || log.contains("OutOfMemoryError", true)) {
             add(
                 BuildIssue(

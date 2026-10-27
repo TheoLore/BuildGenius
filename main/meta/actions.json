@@ -5,10 +5,10 @@
       "id": "action_build_genius_open",
       "type": "plugin_action",
       "title": "Build Genius",
-      "description": "Open the Build Genius dashboard – diagnose, fix and turbo-optimize builds for ACSIDE",
+      "description": "Scan the last Gradle log and fix ACSIDE sync errors. Works from the home screen.",
       "iconName": "Build",
-      "showIn": ["editorOverflow", "toolbar"],
-      "priority": 10,
+      "showIn": ["home", "quickActions", "editorOverflow", "toolbar"],
+      "priority": 1,
       "pluginConfig": {
         "pluginPath": "BuildGenius/plugin.apk",
         "className": "io.github.canadian.dev.buildgenius.BuildGeniusPlugin",
@@ -20,14 +20,29 @@
       "id": "action_build_genius_quick_fix",
       "type": "plugin_action",
       "title": "Quick Fix Build",
-      "description": "Apply high-confidence automatic build fixes without opening the dashboard",
+      "description": "Read the Gradle daemon log and apply the fix (Library.getSrcJars, SDK, deps).",
       "iconName": "AutoFixHigh",
-      "showIn": ["editorOverflow"],
-      "priority": 11,
+      "showIn": ["home", "quickActions", "editorOverflow"],
+      "priority": 2,
       "pluginConfig": {
         "pluginPath": "BuildGenius/plugin.apk",
         "className": "io.github.canadian.dev.buildgenius.BuildGeniusPlugin",
         "methodName": "quickFix",
+        "methodType": "static"
+      }
+    },
+    {
+      "id": "settings",
+      "type": "plugin_action",
+      "title": "Build Genius Settings",
+      "description": "Open Build Genius",
+      "iconName": "Settings",
+      "showIn": ["pluginSettings", "home"],
+      "priority": 3,
+      "pluginConfig": {
+        "pluginPath": "BuildGenius/plugin.apk",
+        "className": "io.github.canadian.dev.buildgenius.BuildGeniusPlugin",
+        "methodName": "settings",
         "methodType": "static"
       }
     }
