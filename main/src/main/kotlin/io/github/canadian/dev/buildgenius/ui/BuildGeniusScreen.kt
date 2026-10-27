@@ -1,7 +1,5 @@
 package io.github.canadian.dev.buildgenius.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,19 +36,19 @@ fun BuildGeniusScreen(
         try {
             val snapshot = withContext(Dispatchers.IO) { onAnalyze() }
             state = state.copy(isLoading = false, snapshot = snapshot)
-        } catch (e: Exception) {
-            state = state.copy(isLoading = false, errorMessage = e.message)
+        } catch (e: Throwable) {
+            state = state.copy(isLoading = false, errorMessage = (e.message ?: e.javaClass.simpleName).take(200))
         }
     }
 
     fun refresh() {
         scope.launch {
-            state = state.copy(isLoading = true, lastFixResult = null)
+            state = state.copy(isLoading = true, lastFixResult = null, errorMessage = null)
             try {
                 val snapshot = withContext(Dispatchers.IO) { onAnalyze() }
                 state = state.copy(isLoading = false, snapshot = snapshot)
-            } catch (e: Exception) {
-                state = state.copy(isLoading = false, errorMessage = e.message)
+            } catch (e: Throwable) {
+                state = state.copy(isLoading = false, errorMessage = (e.message ?: e.javaClass.simpleName).take(200))
             }
         }
     }
@@ -80,7 +77,7 @@ fun BuildGeniusScreen(
                 state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-                state.errorMessage != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                state.errorMessage != null -> Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
                     Text(state.errorMessage ?: "", color = MaterialTheme.colorScheme.error)
                 }
                 state.snapshot != null -> {
