@@ -8,73 +8,81 @@ English only • Built for serious productivity
 
 ## What it does
 
-Build Genius deeply analyzes your open project and:
+Build Genius is an **AI-like error fixing system** for ACSIDE:
 
-- Detects outdated AGP / Kotlin / compileSdk
-- Finds missing AndroidX flags and dangerous memory settings
-- Surfaces structural problems (missing modules, incomplete Flutter projects…)
-- Gives every issue a **severity** + **confidence** score
-- Offers **one-click safe fixes** with clear explanations
-- Shows a live **Health Score** dashboard
-
-All changes are written directly to your build files. Re-sync the project afterwards to see the effect.
+1. **Static analysis** of your project (AGP, Kotlin, compileSdk, AndroidX, heap, structure…)
+2. **Real error parsing** – understands Gradle / compiler logs:
+   - Missing dependencies (`Could not find …`, `Failed to resolve …`)
+   - Unresolved references → suggests the correct library (ViewModel, Retrofit, Compose, Room, Hilt…)
+   - Duplicate classes / Support vs AndroidX conflicts
+   - OOM / heap issues
+   - AGP / Kotlin / JDK mismatches
+   - Manifest merger failures
+   - Missing plugins & SDK platforms
+3. **One-click safe fixes** that actually edit your `build.gradle(.kts)` and `gradle.properties`
+4. **Health Score** dashboard (0–100)
 
 ---
 
 ## Features
 
-| Feature                    | Description                                      |
-|---------------------------|--------------------------------------------------|
-| Project Health Score      | 0–100 score based on real issues                 |
-| Smart Diagnosis           | AGP, Kotlin, SDK, Properties, Structure          |
-| One-Click Fix             | High-confidence automatic repairs                |
-| Fix All Safe              | Applies every safe fix in priority order         |
-| Diff-friendly             | Every change is tracked (original → new)         |
-| Quick Fix action          | Run silent auto-fixes from the editor menu       |
-| Beautiful Compose UI      | Modern Material 3 overlay                        |
+| Feature | Description |
+|--------|-------------|
+| Project Health Score | 0–100 based on real issues |
+| Smart Diagnosis | AGP, Kotlin, SDK, Properties, Structure |
+| **Error Log Parser** | Understands real Gradle/compiler output |
+| **Dependency Catalog** | 50+ common symbols → correct Maven coordinates |
+| One-Click Fix | High-confidence automatic repairs |
+| Add Missing Library | Literally inserts `implementation("…")` |
+| Fix All Safe | Applies every safe fix in priority order |
+| Quick Fix action | Silent auto-fixes from editor menu |
+| Material 3 UI | Modern overlay dashboard |
+
+---
+
+## How the "AI-like" fixing works
+
+```
+Build log / static scan
+        ↓
+   ErrorParser (patterns + DependencyCatalog)
+        ↓
+   List of BuildIssue (severity + confidence + fixActionId)
+        ↓
+   BuildFixer (writes real changes to build files)
+        ↓
+   Re-sync project → problem gone
+```
+
+No external AI API required. Everything runs offline on-device.
 
 ---
 
 ## How to build
 
-1. Open the project in Android Studio / ACSIDE
-2. Make sure you have the ACSIDE Plugin API available (JitPack)
-3. Run:
-
 ```bash
 ./gradlew :main:assembleRelease
 ```
 
-The `.acp` file will be generated at `main/build/BuildGenius.acp` and also copied to the root.
+Or let **GitHub Actions** build it (push to `main` or run the workflow manually). The `.acp` is uploaded as an artifact.
 
 ---
 
 ## Installation in ACSIDE
 
-1. Copy `BuildGenius.acp` to your device
-2. Open ACSIDE → Plugins
-3. Install from local file (or put it in the official plugins repo structure)
-
----
-
-## Actions exposed
-
-- **Build Genius** – Opens the full dashboard (editor overflow / toolbar)
-- **Quick Fix Build** – Runs high-confidence automatic fixes immediately
+1. Get `BuildGenius.acp` (from Actions artifact or local build)
+2. ACSIDE → Plugins → Install from file
 
 ---
 
 ## Safety
 
-- Only high-confidence fixes are marked auto-fixable
-- Every change can be inspected
-- No network calls, no telemetry
-- Works completely offline
+- Only high-confidence fixes are auto-applied
+- Every change is tracked
+- Offline, no telemetry
 
 ---
 
 ## Author
 
-Canadian developer – made for people who actually ship apps on-device.
-
-Enjoy.
+Canadian developer – made for people who ship apps on-device.
