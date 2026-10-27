@@ -43,9 +43,7 @@ jobs:
           set -euo pipefail
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-          echo "Installed platforms:"
           ls -la "$ANDROID_HOME/platforms" || true
-          ls -la "$ANDROID_HOME/build-tools" || true
 
       - name: Write local.properties
         run: |
@@ -65,7 +63,7 @@ jobs:
       - name: Build plugin
         run: |
           set -euo pipefail
-          ./gradlew :main:assembleRelease --stacktrace --no-daemon --info 2>&1 | tee build-output.log
+          ./gradlew :main:assembleRelease --stacktrace --no-daemon
           echo "--- outputs ---"
           find main/build -name '*.acp' -o -name '*.apk' | head -50 || true
 
@@ -81,13 +79,12 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload build log on failure
+      - name: Upload build reports on failure
         uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: build-reports
           path: |
-            build-output.log
             main/build/reports/**
             **/build/outputs/**
           if-no-files-found: ignore
