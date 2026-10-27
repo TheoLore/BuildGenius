@@ -22,12 +22,12 @@ acpPlugin {
 
 android {
     namespace = packageName
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = packageName
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = pluginVersion
     }
@@ -88,7 +88,6 @@ tasks.register("updatePluginInf") {
             jsonObject.addProperty("version", pluginVersion)
             jsonObject.addProperty("name", pluginName)
             pluginJsonFile.writeText(gson.toJson(jsonObject))
-            println("Updated plugin.json")
         }
     }
 }
@@ -102,24 +101,14 @@ tasks.matching { it.name == "assembleRelease" || it.name == "assembleDebug" }.co
 }
 
 tasks.register("updateRepositoryJson") {
-    description = "Updates repository.json with checksum, size, version and timestamp"
-    group = "publishing"
-
     doLast {
         val acpFile = file("build/${pluginName}.acp")
         val rootDir = rootProject.projectDir
         val repoFile = rootDir.resolve("repository.json")
         val destAcp = rootDir.resolve("${pluginName}.acp")
-
-        if (!acpFile.exists()) {
-            println("Warning: ${acpFile.path} not found — skipping.")
-            return@doLast
-        }
-
+        if (!acpFile.exists()) return@doLast
         acpFile.copyTo(destAcp, overwrite = true)
-
         if (!repoFile.exists()) return@doLast
-
         val gson = GsonBuilder().setPrettyPrinting().create()
         val json = gson.fromJson(repoFile.readText(), JsonObject::class.java)
         json.addProperty("latestVersion", pluginVersion)
