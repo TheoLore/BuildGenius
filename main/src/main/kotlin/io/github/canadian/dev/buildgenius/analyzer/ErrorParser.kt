@@ -1,5 +1,6 @@
 package io.github.canadian.dev.buildgenius.analyzer
 
+import android.util.Log
 import io.github.canadian.dev.buildgenius.model.BuildIssue
 import io.github.canadian.dev.buildgenius.model.IssueCategory
 import io.github.canadian.dev.buildgenius.model.IssueSeverity
@@ -7,8 +8,21 @@ import java.util.regex.Pattern
 
 class ErrorParser {
 
+    companion object {
+        private const val TAG = "BuildGenius.Parser"
+    }
+
     fun parse(log: String): List<BuildIssue> {
         if (log.isBlank()) return emptyList()
+        return try {
+            parseInternal(log)
+        } catch (t: Throwable) {
+            Log.e(TAG, "parse failed: ${t.message}", t)
+            emptyList()
+        }
+    }
+
+    private fun parseInternal(log: String): List<BuildIssue> {
         val issues = mutableListOf<BuildIssue>()
         val seen = mutableSetOf<String>()
         fun add(issue: BuildIssue) {
