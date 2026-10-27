@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -22,25 +22,23 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Grant execute permission for gradlew
+      - name: Create Gradle Wrapper
         run: |
-          if [ -f ./gradlew ]; then
-            chmod +x ./gradlew
-          else
-            echo "No gradlew yet – will use gradle wrapper from distribution"
-          fi
-
-      - name: Build plugin (assembleRelease)
-        run: |
-          # If wrapper is missing, use system gradle to generate it first
           if [ ! -f ./gradlew ]; then
             gradle wrapper --gradle-version 8.11.1
             chmod +x ./gradlew
           fi
-          ./gradlew :main:assembleRelease --stacktrace --info
+
+      - name: Build plugin (assembleRelease)
+        run: |
+          chmod +x ./gradlew || true
+          ./gradlew :main:assembleRelease --stacktrace --no-daemon
 
       - name: Upload .acp artifact
         uses: actions/upload-artifact@v4
@@ -50,16 +48,17 @@ jobs:
           path: |
             main/build/*.acp
             BuildGenius.acp
+            main/build/outputs/apk/**/*.apk
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Upload build reports
+      - name: Upload build reports on failure
         uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
           name: build-reports
           path: |
             main/build/reports/**
-            main/build/outputs/**
+            **/build/outputs/**
           if-no-files-found: ignore
           retention-days: 7
